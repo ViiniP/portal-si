@@ -1,15 +1,13 @@
 <?php
 
-// Inicia ou recupera a sessão
-session_start();
-
+require_once __DIR__ . '/../../config/auth.php';
 require_once __DIR__ . '/../../config/database.php';
 
 $erro = '';
 
 // Se o usuário já estiver autenticado,
 // não precisa fazer login novamente
-if (isset($_SESSION['usuario_id'])) {
+if (usuarioAutenticado()) {
     header('Location: dashboard.php');
     exit;
 }

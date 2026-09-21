@@ -1,12 +1,8 @@
 <?php
 
-session_start();
+require_once __DIR__ . '/../../config/auth.php';
 
-// Protege o dashboard contra acesso sem login
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
-    exit;
-}
+exigirLogin();
 
 // Recupera os dados armazenados na sessão
 $nome = $_SESSION['usuario_nome'];
