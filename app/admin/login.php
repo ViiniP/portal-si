@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../../config/auth.php';
+require_once __DIR__ . '/../helpers/auth.php';
 require_once __DIR__ . '/../../config/database.php';
 
 $erro = '';
@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Login | Portal SI</title>
-    <link rel="stylesheet" href="../../public/css/login.css">
+    <link rel="stylesheet" href="../../public/assets/css/login.css">
 </head>
 
 <body>
