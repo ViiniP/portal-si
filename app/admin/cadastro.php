@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <title>Criar conta | Portal SI</title>
 
-    <link rel="stylesheet" href="../../public/css/cadastro.css">
+    <link rel="stylesheet" href="../../public/assets/css/cadastro.css">
 </head>
 
 <body>

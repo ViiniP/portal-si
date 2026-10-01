@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../../config/auth.php';
+require_once __DIR__ . '/../helpers/auth.php';
 
 exigirLogin();
 
@@ -20,7 +20,7 @@ $perfil = $_SESSION['usuario_perfil'];
 
     <title>Dashboard | Portal SI</title>
 
-    <link rel="stylesheet" href="../../public/css/dashboard.css">
+    <link rel="stylesheet" href="../../public/assets/css/dashboard.css">
 </head>
 
 <body>
