@@ -1,0 +1,539 @@
+/* =========================================================
+   PORTAL SI — REDESIGN
+   ========================================================= */
+
+/* 1. VARIÁVEIS E RESET */
+:root {
+    --cor-primaria: #2563eb;
+    --cor-primaria-hover: #1d4ed8;
+    --cor-destaque: #38bdf8;
+    --cor-secundaria: #0f172a;
+    --cor-secundaria-clara: #1e293b;
+    --cor-fundo: #f1f5f9;
+    --cor-superficie: #ffffff;
+    --cor-borda: #e2e8f0;
+    --cor-texto-principal: #0f172a;
+    --cor-texto-suave: #64748b;
+    --fonte-principal: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    --espacamento-padrao: 1rem;
+    --borda-raio: 16px;
+    --sombra-suave: 0 10px 30px rgba(15, 23, 42, 0.06);
+    --sombra-cartao: 0 15px 40px rgba(15, 23, 42, 0.08);
+    --sombra-hover: 0 25px 50px rgba(37, 99, 235, 0.16);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto-principal);
+    font-family: var(--fonte-principal);
+    font-size: 16px;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* 2. ESTRUTURA GERAL */
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--espacamento-padrao);
+}
+
+.container-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.conteudo-principal {
+    flex: 1 0 auto;
+    padding-bottom: 4rem;
+}
+
+/* 3. CABEÇALHO */
+.cabecalho-principal {
+    background: rgba(15, 23, 42, 0.94);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 1.1rem 0;
+    box-shadow: 0 8px 32px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .cabecalho-principal {
+        background: linear-gradient(120deg, rgba(15, 23, 42, 0.76), rgba(30, 58, 138, 0.52));
+        -webkit-backdrop-filter: blur(20px) saturate(150%);
+        backdrop-filter: blur(20px) saturate(150%);
+    }
+}
+
+.cabecalho-principal a:focus-visible {
+    outline: 2px solid var(--cor-destaque);
+    outline-offset: 4px;
+}
+
+.marca a {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.marca-sigla {
+    background: linear-gradient(135deg, var(--cor-primaria), var(--cor-destaque));
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 800;
+    padding: 0.45rem 0.75rem;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.35);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.marca a:hover .marca-sigla {
+    transform: rotate(-4deg) scale(1.08);
+    box-shadow: 0 8px 20px rgba(56, 189, 248, 0.4);
+}
+
+.marca-nome {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+}
+
+/* 4. MENU */
+.menu-lista {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.menu-lista a {
+    position: relative;
+    display: block;
+    text-decoration: none;
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 0.55rem 0.8rem;
+    border-radius: 8px;
+    transition: color 0.25s ease, background-color 0.25s ease, transform 0.25s ease;
+}
+
+.menu-lista a:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.07);
+    transform: translateY(-2px);
+}
+
+.menu-lista a:not(.btn-acesso)::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 2px;
+    width: 0;
+    height: 2px;
+    background: var(--cor-destaque);
+    border-radius: 10px;
+    transform: translateX(-50%);
+    transition: width 0.3s ease;
+}
+
+.menu-lista a:not(.btn-acesso):hover::after {
+    width: 60%;
+}
+
+.btn-acesso {
+    background: linear-gradient(135deg, var(--cor-primaria), #3b82f6);
+    color: #ffffff !important;
+    padding: 0.55rem 1.1rem !important;
+    border-radius: 9px !important;
+    margin-left: 0.5rem;
+    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.25);
+}
+
+.btn-acesso:hover {
+    background: linear-gradient(135deg, var(--cor-primaria-hover), var(--cor-primaria)) !important;
+    transform: translateY(-2px);
+}
+
+/* 5. HERO */
+.secao-hero {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 85% 20%, rgba(56, 189, 248, 0.25), transparent 25%),
+        radial-gradient(circle at 10% 90%, rgba(37, 99, 235, 0.3), transparent 30%),
+        linear-gradient(135deg, rgba(15, 23, 42, 0.88) 0%, rgba(23, 37, 84, 0.82) 55%, rgba(30, 58, 138, 0.8) 100%),
+        url('../imagens/11696.jpg') center / cover no-repeat;
+    background-color: #172554;
+    color: #ffffff;
+    padding: 13rem 0 7rem;
+    margin-bottom: 4rem;
+}
+
+.secao-hero::before {
+    content: "";
+    position: absolute;
+    width: 350px;
+    height: 350px;
+    right: -120px;
+    top: -170px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+}
+
+.secao-hero::after {
+    content: "";
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    right: 40px;
+    top: -100px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.secao-hero .container {
+    position: relative;
+    z-index: 2;
+    animation: entradaHero 0.8s ease-out;
+}
+
+.secao-hero h1 {
+    max-width: 850px;
+    font-size: clamp(2.2rem, 5vw, 4.3rem);
+    line-height: 1.05;
+    letter-spacing: -0.05em;
+    margin-bottom: 1.5rem;
+    font-weight: 800;
+}
+
+.secao-hero h1::after {
+    content: "";
+    display: block;
+    width: 80px;
+    height: 5px;
+    margin-top: 1.5rem;
+    background: linear-gradient(90deg, var(--cor-destaque), var(--cor-primaria));
+    border-radius: 20px;
+}
+
+.secao-hero p {
+    max-width: 700px;
+    color: #cbd5e1;
+    font-size: 1.15rem;
+    line-height: 1.8;
+}
+
+/* 6. PUBLICAÇÕES */
+.secao-publicacoes {
+    margin-top: 2rem;
+}
+
+.subtitulo-secao {
+    position: relative;
+    display: inline-block;
+    font-size: 1.8rem;
+    color: var(--cor-secundaria);
+    margin-bottom: 2rem;
+    padding-bottom: 0.6rem;
+    letter-spacing: -0.03em;
+}
+
+.subtitulo-secao::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 45%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--cor-primaria), var(--cor-destaque));
+    border-radius: 10px;
+}
+
+/* 7. CARDS */
+.grade-publicacoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.cartao-conteudo {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--borda-raio);
+    box-shadow: var(--sombra-cartao);
+    padding: 1.7rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 calc(33.333% - 1.5rem);
+    min-width: 280px;
+    transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+    animation: entradaCartao 0.6s ease-out both;
+}
+
+.cartao-conteudo::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--cor-primaria), var(--cor-destaque));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s ease;
+}
+
+.cartao-conteudo:hover {
+    transform: translateY(-8px);
+    border-color: rgba(37, 99, 235, 0.3);
+    box-shadow: var(--sombra-hover);
+}
+
+.cartao-conteudo:hover::before {
+    transform: scaleX(1);
+}
+
+.cartao-cabecalho {
+    margin-bottom: 1rem;
+}
+
+.cartao-categoria {
+    display: inline-block;
+    width: fit-content;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: var(--cor-primaria);
+    letter-spacing: 0.08em;
+    background: #eff6ff;
+    padding: 0.3rem 0.65rem;
+    border-radius: 50px;
+}
+
+.cartao-titulo {
+    font-size: 1.25rem;
+    line-height: 1.35;
+    margin-top: 0.8rem;
+    color: var(--cor-secundaria);
+    letter-spacing: -0.02em;
+}
+
+.cartao-resumo {
+    color: var(--cor-texto-suave);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+}
+
+.cartao-rodape {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    border-top: 1px solid var(--cor-borda);
+    padding-top: 1rem;
+    font-size: 0.82rem;
+    color: var(--cor-texto-suave);
+}
+
+.cartao-link {
+    text-decoration: none;
+    color: var(--cor-primaria);
+    font-weight: 700;
+    white-space: nowrap;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.cartao-link:hover {
+    transition: transform 0.2s ease;
+    color: var(--cor-primaria-hover);
+}
+
+/* 8. RODAPÉ */
+.rodape-principal {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #020617, #0f172a);
+    color: #ffffff;
+    padding: 3rem 0;
+    margin-top: auto;
+    border-top: 3px solid var(--cor-primaria);
+}
+
+.rodape-principal::before {
+    content: "";
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    right: -100px;
+    bottom: -180px;
+    background: rgba(37, 99, 235, 0.15);
+    border-radius: 50%;
+}
+
+.rodape-grid {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    font-size: 0.9rem;
+}
+
+.rodape-instituicao {
+    font-size: 1.05rem;
+    margin-bottom: 0.3rem;
+}
+
+.rodape-creditos {
+    text-align: right;
+    color: #94a3b8;
+    font-size: 0.82rem;
+}
+
+/* 9. ANIMAÇÕES */
+@keyframes entradaHero {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes entradaCartao {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 10. TABLETS */
+@media (max-width: 1024px) {
+    .cartao-conteudo {
+        flex: 1 1 calc(50% - 1.5rem);
+    }
+
+    .secao-hero {
+        padding: 11rem 0 5rem;
+    }
+}
+
+/* 11. CELULARES */
+@media (max-width: 768px) {
+    .container {
+        width: 94%;
+    }
+
+    .container-flex {
+        flex-direction: column;
+        gap: 1.2rem;
+    }
+
+    .cabecalho-principal {
+        padding: 1rem 0;
+    }
+
+    .cabecalho-principal .container-flex {
+        gap: 0.75rem;
+    }
+
+    .navegacao-global {
+        width: 100%;
+    }
+
+    .menu-lista {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.4rem;
+    }
+
+    .menu-lista li {
+        width: auto;
+    }
+
+    .menu-lista a {
+        width: 100%;
+        text-align: center;
+    }
+
+    .btn-acesso {
+        margin-left: 0;
+    }
+
+    .secao-hero {
+        padding: 12rem 0 4rem;
+        margin-bottom: 3rem;
+    }
+
+    .secao-hero h1 {
+        font-size: 2.4rem;
+    }
+
+    .secao-hero p {
+        font-size: 1rem;
+    }
+
+    .cartao-conteudo {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
+
+    .rodape-grid {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .rodape-creditos {
+        text-align: center;
+    }
+}
+
+/* 12. ACESSIBILIDADE */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
