@@ -17,13 +17,32 @@ function exigirLogin(string $paginaLogin = 'login.php'): void
     }
 }
 
-function exigirPerfil(array|string $perfisPermitidos, string $paginaLogin = 'login.php'): void
+function redirecionarAposLogin(string $paginaInicial): void
+{
+    $destino = ($_SESSION['usuario_perfil'] ?? null) === 'admin'
+        ? 'dashboard.php'
+        : $paginaInicial;
+
+    header('Location: ' . $destino);
+    exit;
+}
+
+function exigirPerfil(
+    array|string $perfisPermitidos,
+    string $paginaLogin = 'login.php',
+    ?string $paginaSemPermissao = null
+): void
 {
     exigirLogin($paginaLogin);
 
     $perfisPermitidos = (array) $perfisPermitidos;
 
     if (!in_array($_SESSION['usuario_perfil'] ?? null, $perfisPermitidos, true)) {
+        if ($paginaSemPermissao !== null) {
+            header('Location: ' . $paginaSemPermissao);
+            exit;
+        }
+
         http_response_code(403);
         exit('Acesso não autorizado.');
     }

@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../../helpers/auth.php';
 
-exigirLogin();
+exigirPerfil('admin', 'login.php', '../../../public/index.php');
 
 // Recupera os dados armazenados na sessão
 $nome = $_SESSION['usuario_nome'];

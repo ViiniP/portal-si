@@ -1,17 +1,16 @@
 <?php
 
 require_once __DIR__ . '/../helpers/auth.php';
-require_once __DIR__ . '/../../config/database.php';
 
 $erro = '';
 
 // Se o usuário já estiver autenticado,
 // não precisa fazer login novamente
 if (usuarioAutenticado()) {
-    header('Location: dashboard.php');
-    exit;
+    redirecionarAposLogin('../../public/index.php');
 }
 
+require_once __DIR__ . '/../../config/database.php';
 
 // Verifica se o formulário foi enviado
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -74,9 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['usuario_perfil'] = $usuario['perfil'];
             $_SESSION['ultimo_acesso'] = time();
 
-            // Envia o usuário para o painel
-            header('Location: dashboard.php');
-            exit;
+            // Encaminha o usuário de acordo com o perfil.
+            redirecionarAposLogin('../../public/index.php');
 
         } else {
 
