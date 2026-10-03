@@ -434,6 +434,28 @@
     opacity: .65;
 }
 
+/* O card inteiro funciona como link nos módulos disponíveis. */
+a.modulo-card {
+    display: block;
+    color: var(--cor-texto-principal);
+    text-decoration: none;
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+a.modulo-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--acento);
+    box-shadow: var(--sombra-cartao);
+}
+
+.pagina-dashboard a.modulo-card:focus-visible {
+    outline: 3px solid var(--acento);
+    outline-offset: 4px;
+}
+
 .modulo-violeta {
     --acento: #7c3aed;
     --fundo-icone: #f5f3ff;

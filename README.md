@@ -34,9 +34,10 @@ O desenvolvimento acontece de forma incremental, aplicando conceitos de programa
 | **Perfis de acesso** | Redirecionamento após login conforme o perfil e restrição do dashboard aos administradores. |
 | **Cabeçalho da home** | Identificação do usuário autenticado e opção de sair da sessão. |
 | **Dashboard** | Boas-vindas personalizadas, dados da conta e apresentação das futuras áreas de gestão. |
+| **Usuários** | Listagem administrativa com ID, nome, e-mail, perfil, status e data de cadastro. |
 | **Interface** | Identidade visual compartilhada entre home e dashboard, com layouts adaptados para desktop e celular. |
 
-> Os cards de conteúdos, usuários, categorias e eventos apresentam as áreas planejadas do painel. As operações de gestão desses módulos ainda serão implementadas.
+> O módulo Usuários já permite consultar as contas cadastradas. Cadastro administrativo, edição, filtros e alterações de permissões serão desenvolvidos nas próximas etapas. Os demais cards apresentam áreas planejadas do painel.
 
 ## Tecnologias e organização
 
@@ -51,12 +52,11 @@ O projeto organiza o código em pastas de modelos, visualizações e helpers. Pa
 ```text
 portal-si/
 ├── app/
-│   ├── admin/             # Entradas administrativas alternativas
 │   ├── controllers/       # Estrutura para controladores
 │   ├── helpers/           # Autenticação e escape de HTML
 │   ├── models/            # Acesso aos dados
 │   └── views/
-│       ├── admin/         # Login, cadastro, dashboard e logout
+│       ├── admin/         # Login, cadastro, dashboard, usuários e logout
 │       ├── home/          # Página inicial
 │       └── layout/        # Cabeçalho e rodapé
 ├── config/                # Configuração de banco e autenticação
@@ -116,8 +116,11 @@ Inicie o Apache e acesse:
 | Login | `http://localhost/portal-si/app/views/admin/login.php` |
 | Cadastro | `http://localhost/portal-si/app/views/admin/cadastro.php` |
 | Dashboard | `http://localhost/portal-si/app/views/admin/dashboard.php` |
+| Usuários | `http://localhost/portal-si/app/views/admin/usuarios.php` |
 
 A estrutura atual utiliza páginas de `app/views/admin` diretamente nas URLs. Para esse fluxo, disponibilize a pasta completa do projeto pelo servidor, como no exemplo com XAMPP.
+
+As páginas administrativas ficam somente em `app/views/admin`. A antiga pasta `app/admin`, que duplicava essas páginas, foi removida; atualize favoritos antigos para os endereços acima.
 
 ## Perfis e primeiro acesso
 
@@ -166,8 +169,9 @@ A existência das tabelas não significa que todas as telas e operações desses
 - [x] Implementar cadastro, login e redirecionamento por perfil.
 - [x] Proteger o acesso ao dashboard administrativo.
 - [x] Unificar a identidade visual da home e do dashboard.
+- [x] Listar usuários em uma página exclusiva para administradores.
 - [ ] Implementar as páginas de leitura de conteúdo e navegação por categoria.
-- [ ] Desenvolver a gestão de usuários e permissões.
+- [ ] Ampliar a gestão de usuários com busca, cadastro administrativo, edição e permissões.
 - [ ] Criar, editar, revisar, publicar e arquivar conteúdos.
 - [ ] Gerenciar categorias, tags e eventos.
 - [ ] Disponibilizar upload e organização de mídias.

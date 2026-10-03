@@ -3,15 +3,20 @@
 require_once __DIR__ . '/../../helpers/auth.php';
 require_once __DIR__ . '/../../helpers/seguranca.php';
 
-// Permite compartilhar a tela com a entrada em app/admin/dashboard.php.
-$caminhoPublico = $caminhoPublico ?? '../../../public';
+$caminhoPublico = '../../../public';
 exigirPerfil('admin', 'login.php', $caminhoPublico . '/index.php');
 
 $nome = $_SESSION['usuario_nome'] ?? '';
 $email = $_SESSION['usuario_email'] ?? '';
 $modulos = [
     ['icone' => 'documento', 'nome' => 'Conteúdos', 'descricao' => 'Notícias, projetos e histórias que conectam nossa comunidade.', 'cor' => 'azul'],
-    ['icone' => 'usuarios', 'nome' => 'Usuários', 'descricao' => 'Pessoas, perfis e permissões de acesso ao Portal SI.', 'cor' => 'violeta'],
+    [
+        'icone' => 'usuarios',
+        'nome' => 'Usuários',
+        'descricao' => 'Pessoas, perfis e permissões de acesso ao Portal SI.',
+        'cor' => 'violeta',
+        'url' => 'usuarios.php',
+    ],
     ['icone' => 'categoria', 'nome' => 'Categorias', 'descricao' => 'Organização das publicações por assuntos e áreas de interesse.', 'cor' => 'ciano'],
     ['icone' => 'calendario', 'nome' => 'Eventos', 'descricao' => 'Encontros e experiências que fazem parte da vida acadêmica.', 'cor' => 'laranja'],
 ];
@@ -99,13 +104,26 @@ $icone = static function (string $id): void {
 
                     <div class="modulos-grade">
                         <?php foreach ($modulos as $modulo): ?>
-                            <article class="modulo-card modulo-<?= e($modulo['cor']) ?>">
+                            <?php if (isset($modulo['url'])): ?>
+                                <a
+                                    href="<?= e($modulo['url']) ?>"
+                                    class="modulo-card modulo-<?= e($modulo['cor']) ?>"
+                                >
+                            <?php else: ?>
+                                <article class="modulo-card modulo-<?= e($modulo['cor']) ?>">
+                            <?php endif; ?>
+
                                 <div class="modulo-topo">
                                     <span class="modulo-icone"><?php $icone($modulo['icone']); ?></span>
                                 </div>
                                 <h3><?= e($modulo['nome']) ?></h3>
                                 <p><?= e($modulo['descricao']) ?></p>
-                            </article>
+
+                            <?php if (isset($modulo['url'])): ?>
+                                </a>
+                            <?php else: ?>
+                                </article>
+                            <?php endif; ?>
                         <?php endforeach; ?>
                     </div>
 

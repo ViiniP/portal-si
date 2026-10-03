@@ -1,0 +1,112 @@
+
+/* =========================================================
+   1. ESTRUTURA DA PÁGINA
+   ========================================================= */
+
+.usuarios-conteudo {
+    padding-block: 40px;
+}
+
+.usuarios-conteudo h1 {
+    margin-top: 8px;
+    font-size: clamp(28px, 4vw, 38px);
+    letter-spacing: -1px;
+}
+
+.usuarios-total {
+    margin-block: 24px 14px;
+    color: var(--cor-texto-suave);
+    font-size: 14px;
+}
+
+/* =========================================================
+   2. TABELA
+   ========================================================= */
+
+.usuarios-tabela-container {
+    overflow-x: auto;
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 16px;
+    box-shadow: var(--sombra-suave);
+}
+
+.usuarios-tabela-container:focus-visible {
+    outline: 3px solid var(--cor-primaria);
+    outline-offset: 4px;
+}
+
+.usuarios-tabela {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.usuarios-tabela caption {
+    padding: 18px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--cor-secundaria);
+}
+
+.usuarios-tabela th,
+.usuarios-tabela td {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--cor-borda);
+    font-size: 14px;
+    vertical-align: top;
+}
+
+.usuarios-tabela th {
+    background-color: #eff6ff;
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.usuarios-tabela td {
+    max-width: 300px;
+    overflow-wrap: anywhere;
+}
+
+.usuarios-tabela tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.usuarios-tabela tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* =========================================================
+   3. MENSAGENS E NAVEGAÇÃO
+   ========================================================= */
+
+.usuarios-alerta,
+.usuarios-vazio {
+    margin-top: 24px;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.usuarios-alerta {
+    color: #991b1b;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+}
+
+.usuarios-vazio {
+    color: var(--cor-texto-suave);
+    background-color: white;
+    border: 1px solid var(--cor-borda);
+}
+
+.usuarios-voltar {
+    display: inline-block;
+    margin-top: 24px;
+    color: var(--cor-primaria);
+    font-weight: 600;
+}
+
+.usuarios-voltar:hover {
+    text-decoration: underline;
+}
