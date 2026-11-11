@@ -1,0 +1,13 @@
+Options -Indexes
+DirectoryIndex index.php
+
+# Recursos internos continuam acessíveis pelo PHP, mas não pela URL.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(?:config|database|docs|tests|node_modules|\.git|\.codex)(?:/|$) - [F,L]
+    RewriteRule ^app/(?:controllers|helpers|models)(?:/|$) - [F,L]
+    RewriteRule ^app/views/(?:layout|admin/includes)(?:/|$) - [F,L]
+</IfModule>
+<FilesMatch "(^\.|^(package(?:-lock)?\.json|README\.md)$)">
+    Require all denied
+</FilesMatch>

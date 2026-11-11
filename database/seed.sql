@@ -11,16 +11,16 @@ BEGIN;
 -- 1) USUÁRIOS
 -- ============================================================
 -- IMPORTANTE:
--- As senhas abaixo são hashes de exemplo para popular o banco.
--- Para login real, substitua senha_hash por valores gerados pelo
--- password_hash() do PHP.
+-- Contas de demonstração LOCAL: senha PortalSI@2026.
+-- Não use essas contas/senhas em uma implantação pública.
+-- ON CONFLICT preserva as contas e senhas que já existem.
 
 INSERT INTO usuarios (nome, email, senha_hash, perfil, status, bio, foto)
 VALUES
     (
         'Administrador Portal SI',
         'admin@portal-si.local',
-        '$2y$10$abcdefghijklmnopqrstuv12345678901234567890123456789012',
+        '$2y$10$l6b4bVHLazck/U0/QdGKxOWI9JM.cTLrDNyMpCitpK8zP.QiNCWSS',
         'admin',
         'ativo',
         'Administrador responsável pela gestão do Portal SI.',
@@ -29,7 +29,7 @@ VALUES
     (
         'Prof. Jucemar Formigoni',
         'jucemar@portal-si.local',
-        '$2y$10$abcdefghijklmnopqrstuv12345678901234567890123456789012',
+        '$2y$10$l6b4bVHLazck/U0/QdGKxOWI9JM.cTLrDNyMpCitpK8zP.QiNCWSS',
         'editor',
         'ativo',
         'Professor e editor de conteúdos acadêmicos do Portal SI.',
@@ -38,7 +38,7 @@ VALUES
     (
         'Equipe Acadêmica SI',
         'academico@portal-si.local',
-        '$2y$10$abcdefghijklmnopqrstuv12345678901234567890123456789012',
+        '$2y$10$l6b4bVHLazck/U0/QdGKxOWI9JM.cTLrDNyMpCitpK8zP.QiNCWSS',
         'aluno',
         'ativo',
         'Perfil acadêmico utilizado para publicações de projetos e atividades.',

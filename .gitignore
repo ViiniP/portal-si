@@ -1,0 +1,7 @@
+/node_modules/
+/.codex/
+/tests/artifacts/
+/tests/.runtime/
+/app/views/admin/uploads/*
+!/app/views/admin/uploads/.htaccess
+.env

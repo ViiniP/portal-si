@@ -1,6 +1,17 @@
 <?php
-
-$titulo_pagina = "Página Inicial";
+require_once __DIR__ . '/../../helpers/portal.php';
+require_once __DIR__ . '/../../../config/database.php';
+require_once __DIR__ . '/../../models/Conteudo.php';
+$categoriaSlug = textoEntrada($_GET, 'categoria');
+$categoriaAtual = null;
+if ($categoriaSlug !== '') {
+    $stmt = $pdo->prepare('SELECT nome, descricao FROM categorias WHERE slug=:slug AND ativa=TRUE');
+    $stmt->execute(['slug' => $categoriaSlug]);
+    $categoriaAtual = $stmt->fetch();
+    if (!$categoriaAtual) http_response_code(404);
+}
+$titulo_pagina = $categoriaSlug !== '' ? ($categoriaAtual['nome'] ?? 'Categoria não encontrada') : 'Página inicial';
+$conteudos_recentes = (new Conteudo($pdo))->listarPublicados(60, $categoriaSlug ?: null);
 
 require_once __DIR__ . '/../layout/header.php';
 ?>
@@ -8,14 +19,13 @@ require_once __DIR__ . '/../layout/header.php';
 <!-- Seção Hero / Destaque de Abertura -->
 <section class="secao-hero" aria-labelledby="titulo-hero">
     <div class="container">
-        <h1 id="titulo-hero">
-            Portal de Sistemas de Informação — ESUCRI
-        </h1>
+        <p class="hero-eyebrow">SISTEMAS DE INFORMAÇÃO · ESUCRI</p>
+        <h1 id="titulo-hero"><?= e($categoriaSlug !== '' ? $titulo_pagina : 'Conhecimento que conecta e transforma.') ?></h1>
 
         <p>
-            A vitrine acadêmica dedicada à promoção, integração e difusão
-            das práticas extensionistas e científicas de nossa comunidade acadêmica.
+            <?= e($categoriaSlug !== '' ? ($categoriaAtual['descricao'] ?? 'Explore outras categorias no menu do portal.') : 'Projetos, pesquisas e experiências que aproximam nossa comunidade acadêmica do mundo. Explore o que estamos construindo juntos.') ?>
         </p>
+        <a class="hero-cta" href="#titulo-publicacoes">Explorar publicações ↓</a>
     </div>
 </section>
 
@@ -23,7 +33,7 @@ require_once __DIR__ . '/../layout/header.php';
 <section class="secao-publicacoes container" aria-labelledby="titulo-publicacoes">
 
     <h2 id="titulo-publicacoes" class="subtitulo-secao">
-        Últimas Atualizações
+        <?= $categoriaSlug ? 'Publicações da categoria' : 'Últimas publicações' ?>
     </h2>
 
     <?php if (empty($conteudos_recentes)): ?>
@@ -39,6 +49,9 @@ require_once __DIR__ . '/../layout/header.php';
             <?php foreach ($conteudos_recentes as $item): ?>
 
                 <article class="cartao-conteudo">
+                    <?php if ($capa = imagemConteudo($item['imagem_capa'])): ?>
+                        <img class="cartao-imagem" src="<?= e($capa) ?>" alt="" loading="lazy">
+                    <?php endif; ?>
 
                     <header class="cartao-cabecalho">
                         <span class="cartao-categoria">
@@ -59,8 +72,8 @@ require_once __DIR__ . '/../layout/header.php';
                             <?= date('d/m/Y', strtotime($item['publicado_em'])) ?>
                         </time>
 
-                        <a href="conteudo.php?slug=<?= e($item['slug']) ?>" class="cartao-link">
-                            Acessar
+                        <a href="<?= e(portalUrl('public/conteudo.php?slug=' . rawurlencode($item['slug']))) ?>" class="cartao-link" aria-label="<?= e('Ler: ' . $item['titulo']) ?>">
+                            Ler publicação
                         </a>
                     </footer>
 

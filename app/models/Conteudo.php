@@ -17,7 +17,7 @@ class Conteudo
      * @param int $limite Quantidade máxima de registros retornados.
      * @return array
      */
-    public function listarPublicados(int $limite = 6): array
+    public function listarPublicados(int $limite = 6, ?string $categoria = null): array
     {
         $sql = "SELECT
                     c.id,
@@ -36,11 +36,15 @@ class Conteudo
                     ON c.autor_id = u.id
                 WHERE c.status = 'publicado'
                     AND c.publicado_em IS NOT NULL
+                    AND c.publicado_em <= NOW()
+                    AND cat.ativa = TRUE
+                    " . ($categoria !== null ? ' AND cat.slug = :categoria ' : '') . "
                 ORDER BY c.publicado_em DESC
                 LIMIT :limite";
 
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
+        if ($categoria !== null) $stmt->bindValue(':categoria', $categoria);
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

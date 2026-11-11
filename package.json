@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "scripts": {
+    "lint:php": "php tests/lint.php",
+    "test": "php tests/integration.php",
+    "check:css": "prettier --check public/assets/css/auth.css public/assets/css/styles.css app/views/admin/css/admin.css"
+  },
+  "devDependencies": {
+    "prettier": "3.9.9"
+  }
+}
