@@ -113,9 +113,22 @@ try {
     check(bodyContains($r, 'já possui cadastro'), 'Cadastro impede e-mail duplicado com diferença de caixa');
     check(bodyContains(login('student', 'aluno.teste@example.test', 'senha-errada'), 'E-mail ou senha inválidos'), 'Login recusa senha incorreta');
     check(bodyContains(login('guest', "' OR 1=1 --@example.test", 'qualquer'), 'Informe seu e-mail'), 'Login recusa entrada inválida');
-    check(login('student', 'ALUNO.TESTE@example.test', 'TesteSeguro@2026')['status'] === 302, 'Login aceita e-mail sem distinção entre maiúsculas e minúsculas');
-    check(login('admin', 'admin@portal-si.local', 'PortalSI@2026')['status'] === 302, 'Conta administrativa do seed autentica');
-    check(login('editor', 'jucemar@portal-si.local', 'PortalSI@2026')['status'] === 302, 'Conta de editor do seed autentica');
+    $studentLogin = login('student', 'ALUNO.TESTE@example.test', 'TesteSeguro@2026');
+    check($studentLogin['status'] === 302 && $studentLogin['location'] === '/public/index.php', 'Login do aluno aceita e-mail sem distinção de caixa e redireciona à Home');
+    $adminLogin = login('admin', 'admin@portal-si.local', 'PortalSI@2026');
+    check($adminLogin['status'] === 302 && $adminLogin['location'] === 'index.php', 'Login do administrador redireciona ao dashboard');
+    $editorLogin = login('editor', 'jucemar@portal-si.local', 'PortalSI@2026');
+    check($editorLogin['status'] === 302 && $editorLogin['location'] === 'index.php', 'Login do editor redireciona ao dashboard');
+    foreach (['student'=>'/public/index.php', 'admin'=>'index.php', 'editor'=>'index.php'] as $client=>$destination) {
+        $r = request($adminPath . 'login.php', null, $client);
+        check($r['status'] === 302 && $r['location'] === $destination, 'Usuário já autenticado mantém destino correto: ' . $client);
+    }
+    $studentHome = request('/public/index.php', null, 'student');
+    check($studentHome['status'] === 200 && bodyContains($studentHome, 'Sair da conta') && !bodyContains($studentHome, 'Meu painel') && !bodyContains($studentHome, 'Acessar portal'), 'Aluno vê a Home com logout e sem acesso ao painel');
+    foreach (['editor', 'admin'] as $client) {
+        check(bodyContains(request('/public/index.php', null, $client), 'Meu painel'), 'Home oferece retorno ao painel: ' . $client);
+    }
+    check(request($adminPath . 'index.php', null, 'editor')['status'] === 200, 'Editor acessa o dashboard');
     $dashboard = request($adminPath . 'index.php', null, 'admin');
     check($dashboard['status'] === 200 && bodyContains($dashboard, 'Atividade recente'), 'Painel exibe indicadores reais');
     check(str_contains($dashboard['headers'], 'text/html'), 'Resposta do painel é HTML');
@@ -123,6 +136,19 @@ try {
     $csrfAdmin = token($newPath, 'admin');
     $cat = (int) $pdo->query("SELECT id FROM categorias WHERE slug='extensao'")->fetchColumn();
     $payload = ['csrf'=>$csrfAdmin,'titulo'=>'Teste de integração <script>alert(1)</script>','categoria_id'=>$cat,'resumo'=>'Resumo seguro <b>texto</b>','corpo'=>"Primeiro parágrafo.\n\nSegundo parágrafo <script>alert(1)</script>",'link_youtube'=>'https://www.youtube.com/watch?v=teste','status'=>'publicado'];
+    $studentToken = token('/public/index.php', 'student');
+    $beforeStudent = $pdo->query('SELECT * FROM conteudos ORDER BY id')->fetchAll();
+    foreach (['index.php', 'conteudo_listar.php', 'conteudo_cadastrar.php', 'conteudos_editar.php?id=1', 'conteudos_excluir.php?id=1'] as $path) {
+        foreach ([null, array_merge($payload, ['csrf'=>$studentToken,'status'=>'rascunho'])] as $data) {
+            $r = request($adminPath . $path, $data, 'student');
+            check($r['status'] === 302 && $r['location'] === '/public/index.php', 'Aluno sem acesso ao painel por ' . ($data === null ? 'GET: ' : 'POST: ') . $path);
+        }
+    }
+    check($beforeStudent === $pdo->query('SELECT * FROM conteudos ORDER BY id')->fetchAll(), 'Tentativas diretas do aluno não alteram registros');
+    $editorForm = request($newPath, null, 'editor');
+    check($editorForm['status'] === 200 && bodyContains($editorForm, 'value="rascunho"') && bodyContains($editorForm, 'value="revisao"') && !bodyContains($editorForm, 'value="publicado"') && !bodyContains($editorForm, 'value="arquivado"'), 'Formulário do editor oferece somente rascunho e revisão');
+    $adminForm = request($newPath, null, 'admin');
+    check(bodyContains($adminForm, 'value="publicado"') && bodyContains($adminForm, 'value="arquivado"'), 'Formulário do administrador permite publicar e arquivar');
     check(request($newPath, array_merge($payload, ['csrf'=>'invalido']), 'admin')['status'] === 403, 'Publicação rejeita token CSRF inválido');
     $r = request($newPath, array_merge($payload, ['categoria_id'=>99999,'link_youtube'=>'javascript:alert(1)']), 'admin');
     check(bodyContains($r, 'categoria disponível') && bodyContains($r, 'link HTTPS'), 'Publicação valida categoria e URL de vídeo');
@@ -164,25 +190,45 @@ try {
     check($r['status'] === 302 && $after['imagem_capa'] !== $created['imagem_capa'] && !is_file($root . '/app/views/admin/' . $created['imagem_capa']), 'Substituição grava nova capa e remove a antiga após salvar');
     $r = request($editPath, array_merge($payload, ['status'=>'rascunho']), 'admin');
     check($r['status'] === 302 && request('/public/conteudo.php?slug=' . $created['slug'])['status'] === 404, 'Retirar publicação do ar oculta a página pública');
-    $studentToken = token($newPath, 'student');
-    $studentPayload = array_merge($payload, ['csrf'=>$studentToken,'titulo'=>'Rascunho do aluno','status'=>'publicado']);
-    check(bodyContains(request($newPath, $studentPayload, 'student'), 'situação permitida'), 'Aluno não publica diretamente');
-    $studentPayload['status'] = 'revisao';
-    check(request($newPath, $studentPayload, 'student')['status'] === 302, 'Aluno envia conteúdo para revisão');
-    $studentContent = $pdo->query("SELECT * FROM conteudos WHERE titulo='Rascunho do aluno'")->fetch();
-    check(!bodyContains(request($adminPath . 'conteudo_listar.php', null, 'student'), 'Publicação editada pelo teste'), 'Aluno vê somente suas publicações na gestão');
-    check(request($editPath, null, 'student')['status'] === 302 && request($adminPath . 'conteudos_excluir.php?id=' . $id, ['csrf'=>$studentToken], 'student')['status'] === 302, 'Aluno não edita nem exclui conteúdo de outro autor');
-    $reviewPath = $adminPath . 'conteudos_editar.php?id=' . $studentContent['id'];
-    $review = array_merge($studentPayload, ['csrf'=>token($reviewPath, 'editor'),'status'=>'publicado']);
-    check(request($reviewPath, $review, 'editor')['status'] === 302 && request('/public/conteudo.php?slug=' . $studentContent['slug'])['status'] === 200, 'Editor publica conteúdo enviado por aluno');
-    check(request($reviewPath, null, 'student')['status'] === 302, 'Aluno não altera conteúdo já publicado');
-    check(request($adminPath . 'conteudos_editar.php?id=999999', null, 'admin')['status'] === 302, 'Editor trata identificador inexistente');
+    $editorToken = token($newPath, 'editor');
+    $editorPayload = array_merge($payload, ['csrf'=>$editorToken,'titulo'=>'Rascunho do editor','status'=>'rascunho']);
+    foreach (['publicado', 'arquivado'] as $status) {
+        check(bodyContains(request($newPath, array_merge($editorPayload, ['status'=>$status]), 'editor'), 'situação permitida'), 'Servidor rejeita criação do editor como ' . $status);
+    }
+    check((int) $pdo->query("SELECT COUNT(*) FROM conteudos WHERE titulo='Rascunho do editor'")->fetchColumn() === 0, 'Criações proibidas do editor não gravam conteúdo');
+    check(request($newPath, $editorPayload, 'editor')['status'] === 302, 'Editor cria rascunho');
+    $editorContent = $pdo->query("SELECT * FROM conteudos WHERE titulo='Rascunho do editor'")->fetch();
+    check($editorContent['status'] === 'rascunho' && request('/public/conteudo.php?slug=' . $editorContent['slug'])['status'] === 404, 'Rascunho do editor fica fora do portal público');
+    check(!bodyContains(request($adminPath . 'conteudo_listar.php', null, 'editor'), 'Publicação editada pelo teste'), 'Editor vê somente suas publicações na gestão');
+    check(!bodyContains(request($adminPath . 'index.php', null, 'editor'), 'Publicação editada pelo teste'), 'Dashboard do editor restringe atividade aos próprios conteúdos');
+    check(request($editPath, null, 'editor')['status'] === 302 && request($editPath, $editorPayload, 'editor')['status'] === 302 && request($adminPath . 'conteudos_excluir.php?id=' . $id, ['csrf'=>$editorToken], 'editor')['status'] === 302, 'Editor não edita nem exclui conteúdo de outro autor por GET ou POST');
+    check($pdo->query('SELECT titulo FROM conteudos WHERE id=' . $id)->fetchColumn() === $payload['titulo'], 'Tentativa do editor preserva o conteúdo de outro autor');
+    $reviewPath = $adminPath . 'conteudos_editar.php?id=' . $editorContent['id'];
+    foreach (['publicado', 'arquivado'] as $status) {
+        check(bodyContains(request($reviewPath, array_merge($editorPayload, ['status'=>$status]), 'editor'), 'situação permitida'), 'Servidor rejeita edição do editor como ' . $status);
+        check($pdo->query('SELECT status FROM conteudos WHERE id=' . $editorContent['id'])->fetchColumn() === 'rascunho', 'Situação permanece rascunho após tentativa de ' . $status);
+    }
+    $editorPayload['status'] = 'revisao';
+    check(request($reviewPath, $editorPayload, 'editor')['status'] === 302 && $pdo->query('SELECT status FROM conteudos WHERE id=' . $editorContent['id'])->fetchColumn() === 'revisao', 'Editor envia o próprio rascunho para revisão');
+    $review = array_merge($editorPayload, ['csrf'=>token($reviewPath, 'admin'),'status'=>'publicado']);
+    check(request($reviewPath, $review, 'admin')['status'] === 302 && request('/public/conteudo.php?slug=' . $editorContent['slug'])['status'] === 200, 'Administrador publica conteúdo enviado pelo editor');
+    $editorDeletePath = $adminPath . 'conteudos_excluir.php?id=' . $editorContent['id'];
+    check(request($reviewPath, null, 'editor')['status'] === 302 && request($reviewPath, $editorPayload, 'editor')['status'] === 302 && request($editorDeletePath, ['csrf'=>$editorToken], 'editor')['status'] === 302, 'Editor não altera nem exclui o próprio conteúdo publicado');
+    check($pdo->query('SELECT status FROM conteudos WHERE id=' . $editorContent['id'])->fetchColumn() === 'publicado', 'Tentativas do editor preservam o conteúdo publicado');
+    $editorList = request($adminPath . 'conteudo_listar.php?busca=Rascunho+do+editor', null, 'editor');
+    check(!bodyContains($editorList, 'href="conteudos_editar.php?id=') && !bodyContains($editorList, 'href="conteudos_excluir.php?id='), 'Listagem não oferece edição ou exclusão do conteúdo publicado ao editor');
+    check(request($reviewPath, array_merge($review, ['status'=>'arquivado']), 'admin')['status'] === 302 && request('/public/conteudo.php?slug=' . $editorContent['slug'])['status'] === 404, 'Administrador arquiva conteúdo e o retira da consulta pública');
+    check(request($reviewPath, $editorPayload, 'editor')['status'] === 302 && request($editorDeletePath, ['csrf'=>$editorToken], 'editor')['status'] === 302 && $pdo->query('SELECT status FROM conteudos WHERE id=' . $editorContent['id'])->fetchColumn() === 'arquivado', 'Editor não altera nem exclui conteúdo arquivado');
+    check(request($reviewPath, $review, 'admin')['status'] === 302, 'Administrador republica conteúdo arquivado');
+    check(request($adminPath . 'conteudos_editar.php?id=999999', null, 'admin')['status'] === 302, 'Gestão trata identificador inexistente');
     $deletePath = $adminPath . 'conteudos_excluir.php?id=' . $id;
     check(bodyContains(request($deletePath, null, 'admin'), 'Deseja excluir este conteúdo?') && (int) $pdo->query('SELECT COUNT(*) FROM conteudos WHERE id=' . $id)->fetchColumn() === 1, 'GET de exclusão apenas exibe confirmação');
     check(request($deletePath, ['csrf'=>'invalido'], 'admin')['status'] === 403 && (int) $pdo->query('SELECT COUNT(*) FROM conteudos WHERE id=' . $id)->fetchColumn() === 1, 'Exclusão sem CSRF válido não remove conteúdo');
     check(request($deletePath, ['csrf'=>token($deletePath, 'admin')], 'admin')['status'] === 302 && (int) $pdo->query('SELECT COUNT(*) FROM conteudos WHERE id=' . $id)->fetchColumn() === 0 && !is_file($root . '/app/views/admin/' . $after['imagem_capa']), 'Exclusão confirmada remove registro e capa');
-    $logoutToken = token($adminPath . 'index.php', 'student');
+    $logoutToken = token('/public/index.php', 'student');
+    check(request($adminPath . 'logout.php', ['csrf'=>'invalido'], 'student')['status'] === 403 && bodyContains(request('/public/index.php', null, 'student'), 'Sair da conta'), 'Logout público rejeita CSRF inválido e preserva sessão');
     check(request($adminPath . 'logout.php', ['csrf'=>$logoutToken], 'student')['status'] === 302 && request($adminPath . 'index.php', null, 'student')['location'] === 'login.php', 'Logout encerra sessão e bloqueia o painel');
+    check(bodyContains(request('/public/index.php', null, 'student'), 'Acessar portal') && !bodyContains(request('/public/index.php', null, 'student'), 'Sair da conta'), 'Home volta à navegação anônima após logout');
     $pdo->exec("UPDATE usuarios SET status='inativo' WHERE email='aluno.teste@example.test'");
     check(bodyContains(login('inactive', 'aluno.teste@example.test', 'TesteSeguro@2026'), 'E-mail ou senha inválidos'), 'Usuário inativo não autentica');
     check(!preg_match('/(?:<b>)?(?:Warning|Fatal error|Deprecated|Parse error)(?:<\/b>)?:/i', implode("\n", $httpBodies)), 'Fluxos HTTP não emitem avisos ou erros PHP');

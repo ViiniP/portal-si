@@ -42,10 +42,12 @@ O seed usa `ON CONFLICT DO NOTHING`: ele **não troca senhas de contas já exist
 
 ## Fluxo de publicação
 
-- Administradores e editores gerenciam os conteúdos e podem publicá-los.
+- Administradores entram no dashboard e têm acesso completo às publicações, incluindo publicar e arquivar.
 - Novos cadastros recebem o perfil aluno.
-- Alunos criam seus próprios rascunhos e enviam para revisão. Um editor publica.
-- Alunos não editam nem excluem conteúdos de outros autores ou materiais já publicados.
+- Alunos entram na Home pública e não acessam o painel ou as operações de gestão, mesmo por URL direta.
+- Editores entram no dashboard, criam seus próprios rascunhos e enviam para revisão. Um administrador publica.
+- Editores não publicam nem arquivam conteúdos, e não editam nem excluem conteúdos de outros autores ou materiais já publicados/arquivados.
+- A Home oferece saída da conta por POST com CSRF e acesso ao painel somente para editores e administradores.
 - Somente conteúdos publicados, com data não futura e categoria ativa, aparecem no portal.
 - Uploads aceitam imagens JPG, PNG e GIF de até 2 MB.
 - Exclusão exige uma tela de confirmação e envio POST.

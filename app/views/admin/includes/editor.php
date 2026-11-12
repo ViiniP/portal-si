@@ -13,9 +13,9 @@ if ($modoEdicao) {
         header('Location: conteudo_listar.php?erro=Conteúdo+não+encontrado+ou+sem+permissão.');
         exit;
     }
-    // Alunos podem editar apenas materiais ainda não publicados.
+    // Editores podem editar apenas seus rascunhos e conteúdos em revisão.
     if (!podePublicar() && !in_array($conteudo['status'], ['rascunho', 'revisao'], true)) {
-        header('Location: conteudo_listar.php?erro=Este+conteúdo+deve+ser+editado+por+um+editor.');
+        header('Location: conteudo_listar.php?erro=Este+conteúdo+deve+ser+editado+por+um+administrador.');
         exit;
     }
 }
@@ -71,7 +71,7 @@ require __DIR__ . '/header.php';
 </section>
 <aside class="editor-options"><section class="form-container"><div class="section-heading"><span class="step">02</span><div><h2>Organização</h2><p>Defina onde e como aparecer.</p></div></div>
 <div class="form-group"><label for="categoria_id">Categoria *</label><select class="form-control" id="categoria_id" name="categoria_id" required><option value="">Selecione uma categoria</option><?php foreach ($categorias as $cat): ?><option value="<?= (int) $cat['id'] ?>" <?= (int) $dados['categoria_id'] === (int) $cat['id'] ? 'selected' : '' ?>><?= e($cat['nome']) ?></option><?php endforeach; ?></select></div>
-<div class="form-group"><label for="status">Situação *</label><select class="form-control" id="status" name="status"><?php foreach (['rascunho' => 'Rascunho', 'revisao' => 'Em revisão', 'publicado' => 'Publicado', 'arquivado' => 'Arquivado'] as $valor => $rotulo): ?><?php if (podePublicar() || in_array($valor, ['rascunho', 'revisao'], true)): ?><option value="<?= $valor ?>" <?= $dados['status'] === $valor ? 'selected' : '' ?>><?= $rotulo ?></option><?php endif; ?><?php endforeach; ?></select><small><?= podePublicar() ? 'Selecione Publicado para exibir no portal.' : 'Envie para revisão para que um editor publique.' ?></small></div></section>
+<div class="form-group"><label for="status">Situação *</label><select class="form-control" id="status" name="status"><?php foreach (['rascunho' => 'Rascunho', 'revisao' => 'Em revisão', 'publicado' => 'Publicado', 'arquivado' => 'Arquivado'] as $valor => $rotulo): ?><?php if (podePublicar() || in_array($valor, ['rascunho', 'revisao'], true)): ?><option value="<?= $valor ?>" <?= $dados['status'] === $valor ? 'selected' : '' ?>><?= $rotulo ?></option><?php endif; ?><?php endforeach; ?></select><small><?= podePublicar() ? 'Selecione Publicado para exibir no portal.' : 'Envie para revisão para que um administrador publique.' ?></small></div></section>
 <section class="form-container"><div class="section-heading"><span class="step">03</span><div><h2>Mídia</h2><p>Enriqueça sua publicação.</p></div></div>
 <?php if ($capa = imagemConteudo($conteudo['imagem_capa'])): ?><img class="cover-preview" src="<?= e($capa) ?>" alt="Capa atual da publicação"><?php endif; ?>
 <div class="form-group"><label for="imagem"><?= $modoEdicao ? 'Substituir capa' : 'Imagem de capa' ?></label><input class="form-control file-input" type="file" id="imagem" name="imagem" accept="image/jpeg,image/png,image/gif"><small>JPG, PNG ou GIF. Máximo de 2 MB.<?= $modoEdicao ? ' Deixe vazio para manter a capa.' : '' ?></small></div>

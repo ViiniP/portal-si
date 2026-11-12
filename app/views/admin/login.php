@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../helpers/auth.php';
 if (usuarioAutenticado()) {
-    header('Location: index.php');
+    header('Location: ' . destinoAposLogin());
     exit;
 }
 $erro = '';
@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $senha === '') {
         $erro = 'Informe seu e-mail e sua senha para continuar.';
     } elseif (autenticar($pdo, $email, $senha)) {
-        header('Location: index.php');
+        header('Location: ' . destinoAposLogin());
         exit;
     } else {
         $erro = 'E-mail ou senha inválidos.';

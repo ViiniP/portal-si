@@ -28,12 +28,24 @@ function validarCsrf(): void
 
 function podePublicar(): bool
 {
-    return in_array($_SESSION['usuario_perfil'] ?? '', ['admin', 'editor'], true);
+    return usuarioAutenticado() && ($_SESSION['usuario_perfil'] ?? '') === 'admin';
+}
+
+function podeAcessarPainel(): bool
+{
+    return usuarioAutenticado() && in_array($_SESSION['usuario_perfil'] ?? '', ['admin', 'editor'], true);
+}
+
+function destinoAposLogin(): string
+{
+    return podeAcessarPainel() ? 'index.php' : portalUrl('public/index.php');
 }
 
 function podeGerenciarConteudo(array $conteudo): bool
 {
-    return podePublicar() || ((int) ($conteudo['autor_id'] ?? 0) === (int) ($_SESSION['usuario_id'] ?? 0));
+    return podePublicar() || (podeAcessarPainel()
+        && (int) ($conteudo['autor_id'] ?? 0) === (int) $_SESSION['usuario_id']
+        && in_array($conteudo['status'] ?? '', ['rascunho', 'revisao'], true));
 }
 
 function usuarioAutenticado(): bool
