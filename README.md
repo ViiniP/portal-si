@@ -42,6 +42,8 @@ O `Dockerfile` executa PHP 8.3 com Apache e as extensões PostgreSQL/mbstring. O
 
 Use `DB_SSLMODE=verify-full`, `DB_SSLROOTCERT=/etc/secrets/aiven-ca.pem`, `APP_HTTPS=1`, `UPLOAD_STORAGE=database` e `PORT=80`. A verificação de saúde é `/public/index.php`. O HTTPS externo é gerenciado pelo Render; `APP_HTTPS` garante cookies de sessão seguros atrás desse proxy.
 
+O script de inicialização copia somente o certificado CA público para `/var/run/portal-si/database-ca.pem`, legível pelo usuário do Apache. A senha permanece na variável privada do serviço e a conexão continua usando `verify-full`.
+
 Na inicialização, `database/migrate.php` cria, se necessário, somente a tabela adicional `portal_imagens`. Não recria o schema nem importa o seed. Com `UPLOAD_STORAGE=database`, as novas capas são armazenadas no PostgreSQL, até 2 MB cada, e servidas por `public/imagem.php`; assim persistem quando o container reinicia. Sem essa variável, o envio local de arquivos continua funcionando. Capas antigas em disco precisam ser migradas separadamente, caso existam publicações que as utilizem.
 
 O serviço gratuito pode suspender após 15 minutos sem acessos e demora para iniciar novamente. As sessões de login podem expirar após reinícios. O banco Aiven tem cobrança/plano independente do Render. Essa configuração destina-se à demonstração do projeto.
