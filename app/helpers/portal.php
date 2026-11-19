@@ -19,6 +19,9 @@ function textoEntrada(array $dados, string $chave, string $padrao = ''): string
 
 function imagemConteudo(?string $caminho): ?string
 {
+    if ($caminho && preg_match('~^db/(conteudo_[a-f0-9]{32}\.(?:jpg|png|gif))$~D', $caminho, $partes)) {
+        return portalUrl('public/imagem.php?arquivo=' . rawurlencode($partes[1]));
+    }
     if (!$caminho || !preg_match('~^uploads/[a-zA-Z0-9_.-]+\\.(?:jpg|jpeg|png|gif)$~i', $caminho)) {
         return null;
     }

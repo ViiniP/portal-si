@@ -65,15 +65,36 @@ function login(string $client, string $email, string $password): array
     return request('/app/views/admin/login.php', ['csrf' => token('/app/views/admin/login.php', $client), 'email' => $email, 'senha' => $password], $client);
 }
 function bodyContains(array $response, string $text): bool { return str_contains($response['body'], $text); }
+function imagePath(string $path): string {
+    return str_starts_with($path, 'db/') ? '/public/imagem.php?arquivo=' . rawurlencode(substr($path, 3)) : '/app/views/admin/' . $path;
+}
+function imageExists(string $path): bool {
+    global $pdo, $root;
+    if (!str_starts_with($path, 'db/')) {
+        $file = $root . '/app/views/admin/' . $path;
+        clearstatcache(true, $file);
+        return is_file($file);
+    }
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM portal_imagens WHERE caminho=:caminho');
+    $stmt->execute(['caminho' => $path]);
+    return (int) $stmt->fetchColumn() > 0;
+}
 
 try {
     // Apenas o schema criado nesta execução é alterado ou removido.
     $pdo->exec('CREATE SCHEMA "' . $schema . '"');
     $pdo->exec('SET search_path TO "' . $schema . '"');
     $pdo->exec(file_get_contents($root . '/database/schema.sql'));
+    $pdo->exec(file_get_contents($root . '/database/migrations/20261119_imagens.sql'));
     $pdo->exec(file_get_contents($root . '/database/seed.sql'));
     check($pdo->query('SELECT current_schema()')->fetchColumn() === $schema, 'Banco de teste isolado do schema original');
     $env = getenv();
+    // O servidor HTTP deve usar o mesmo banco isolado deste processo de teste.
+    $env['DB_HOST'] = $host;
+    $env['DB_PORT'] = $port;
+    $env['DB_NAME'] = $dbname;
+    $env['DB_USER'] = getenv('DB_USER') ?: 'postgres';
+    $env['DB_PASSWORD'] = getenv('DB_PASSWORD') ?: 'postgres';
     $env['PGOPTIONS'] = '-c search_path=' . $schema;
     $socket = @stream_socket_client('tcp://127.0.0.1:8765', $errno, $error, .3);
     if ($socket) { fclose($socket); throw new RuntimeException('Porta 8765 ocupada; encerre o servidor de teste anterior.'); }
@@ -172,8 +193,15 @@ try {
     check($created['status'] === 'publicado' && $created['publicado_em'] !== null && $created['slug'] !== '', 'Criação grava slug, situação e data de publicação');
     $public = request('/public/conteudo.php?slug=' . $created['slug']);
     check($public['status'] === 200 && bodyContains($public, '&lt;script&gt;alert(1)&lt;/script&gt;') && !bodyContains($public, '<script>alert(1)</script>'), 'Página de leitura escapa HTML e scripts');
-    check(bodyContains($public, '/app/views/admin/uploads/'), 'Capa usa endereço válido na página pública');
-    check(request('/app/views/admin/' . $created['imagem_capa'])['status'] === 200, 'Imagem enviada é servida corretamente');
+    check(bodyContains($public, imagePath($created['imagem_capa'])), 'Capa usa endereço válido na página pública');
+    $imageResponse = request(imagePath($created['imagem_capa']));
+    check($imageResponse['status'] === 200 && $imageResponse['body'] === file_get_contents($image), 'Imagem enviada é servida sem alteração dos bytes');
+    if (getenv('UPLOAD_STORAGE') === 'database') {
+        check(str_starts_with($created['imagem_capa'], 'db/') && imageExists($created['imagem_capa']), 'Imagem persiste no PostgreSQL sem depender do disco');
+        check(stripos($imageResponse['headers'], 'Content-Type: image/png') !== false && stripos($imageResponse['headers'], 'X-Content-Type-Options: nosniff') !== false, 'Imagem usa MIME seguro e nosniff');
+        check(request('/public/imagem.php?arquivo=../../config/database.php')['status'] === 404, 'Endpoint de imagens rejeita travessia de diretórios');
+        check(request('/public/imagem.php?arquivo=conteudo_' . str_repeat('0', 32) . '.png')['status'] === 404, 'Imagem inexistente retorna 404');
+    }
     check(bodyContains(request($adminPath . 'conteudo_listar.php?' . http_build_query(['busca'=>'Teste de integração','status'=>'publicado']), null, 'admin'), '&lt;script&gt;'), 'Busca e filtro da listagem encontram a publicação e escapam HTML');
     $editPath = $adminPath . 'conteudos_editar.php?id=' . $id;
     $csrfAdmin = token($editPath, 'admin');
@@ -187,7 +215,7 @@ try {
     $r = request($editPath, array_merge($payload, ['imagem'=>new CURLFile($image, 'image/png', 'new.png')]), 'admin', true);
     $after = $pdo->query('SELECT * FROM conteudos WHERE id=' . $id)->fetch();
     $files[] = $root . '/app/views/admin/' . $after['imagem_capa'];
-    check($r['status'] === 302 && $after['imagem_capa'] !== $created['imagem_capa'] && !is_file($root . '/app/views/admin/' . $created['imagem_capa']), 'Substituição grava nova capa e remove a antiga após salvar');
+    check($r['status'] === 302 && $after['imagem_capa'] !== $created['imagem_capa'] && imageExists($after['imagem_capa']) && !imageExists($created['imagem_capa']), 'Substituição grava nova capa e remove a antiga após salvar');
     $r = request($editPath, array_merge($payload, ['status'=>'rascunho']), 'admin');
     check($r['status'] === 302 && request('/public/conteudo.php?slug=' . $created['slug'])['status'] === 404, 'Retirar publicação do ar oculta a página pública');
     $editorToken = token($newPath, 'editor');
@@ -224,7 +252,7 @@ try {
     $deletePath = $adminPath . 'conteudos_excluir.php?id=' . $id;
     check(bodyContains(request($deletePath, null, 'admin'), 'Deseja excluir este conteúdo?') && (int) $pdo->query('SELECT COUNT(*) FROM conteudos WHERE id=' . $id)->fetchColumn() === 1, 'GET de exclusão apenas exibe confirmação');
     check(request($deletePath, ['csrf'=>'invalido'], 'admin')['status'] === 403 && (int) $pdo->query('SELECT COUNT(*) FROM conteudos WHERE id=' . $id)->fetchColumn() === 1, 'Exclusão sem CSRF válido não remove conteúdo');
-    check(request($deletePath, ['csrf'=>token($deletePath, 'admin')], 'admin')['status'] === 302 && (int) $pdo->query('SELECT COUNT(*) FROM conteudos WHERE id=' . $id)->fetchColumn() === 0 && !is_file($root . '/app/views/admin/' . $after['imagem_capa']), 'Exclusão confirmada remove registro e capa');
+    check(request($deletePath, ['csrf'=>token($deletePath, 'admin')], 'admin')['status'] === 302 && (int) $pdo->query('SELECT COUNT(*) FROM conteudos WHERE id=' . $id)->fetchColumn() === 0 && !imageExists($after['imagem_capa']), 'Exclusão confirmada remove registro e capa');
     $logoutToken = token('/public/index.php', 'student');
     check(request($adminPath . 'logout.php', ['csrf'=>'invalido'], 'student')['status'] === 403 && bodyContains(request('/public/index.php', null, 'student'), 'Sair da conta'), 'Logout público rejeita CSRF inválido e preserva sessão');
     check(request($adminPath . 'logout.php', ['csrf'=>$logoutToken], 'student')['status'] === 302 && request($adminPath . 'index.php', null, 'student')['location'] === 'login.php', 'Logout encerra sessão e bloqueia o painel');

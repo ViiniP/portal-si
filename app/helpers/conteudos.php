@@ -15,7 +15,7 @@ function validarConteudo(array $dados, array $categorias): array
     return $erros;
 }
 
-function salvarImagem(array $arquivo): string
+function salvarImagem(array $arquivo, ?PDO $pdo = null): string
 {
     if (($arquivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) throw new RuntimeException('Não foi possível enviar a imagem. Verifique o limite de 2 MB.');
     if (($arquivo['size'] ?? 0) > 2 * 1024 * 1024) throw new RuntimeException('A imagem deve ter no máximo 2 MB.');
@@ -24,6 +24,13 @@ function salvarImagem(array $arquivo): string
     $mime = (new finfo(FILEINFO_MIME_TYPE))->file($tmp);
     $tipos = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif'];
     if (!isset($tipos[$mime]) || @getimagesize($tmp) === false) throw new RuntimeException('Selecione uma imagem JPG, PNG ou GIF válida.');
+    if (getenv('UPLOAD_STORAGE') === 'database') {
+        if (!$pdo) throw new RuntimeException('Conexão indisponível para salvar a imagem.');
+        $caminho = 'db/conteudo_' . bin2hex(random_bytes(16)) . '.' . $tipos[$mime];
+        $stmt = $pdo->prepare("INSERT INTO portal_imagens (caminho, mime, dados) VALUES (:caminho, :mime, decode(:dados, 'base64'))");
+        $stmt->execute(['caminho' => $caminho, 'mime' => $mime, 'dados' => base64_encode(file_get_contents($tmp))]);
+        return $caminho;
+    }
     $dir = __DIR__ . '/../views/admin/uploads';
     if (!is_dir($dir) && !mkdir($dir, 0755, true)) throw new RuntimeException('Não foi possível preparar a pasta de imagens.');
     $caminho = 'uploads/conteudo_' . bin2hex(random_bytes(16)) . '.' . $tipos[$mime];
@@ -31,8 +38,14 @@ function salvarImagem(array $arquivo): string
     return $caminho;
 }
 
-function removerImagem(?string $caminho): void
+function removerImagem(?string $caminho, ?PDO $pdo = null): void
 {
+    if ($caminho && preg_match('~^db/conteudo_[a-f0-9]{32}\.(?:jpg|png|gif)$~D', $caminho)) {
+        if (!$pdo) throw new RuntimeException('Conexão indisponível para remover a imagem.');
+        $stmt = $pdo->prepare('DELETE FROM portal_imagens WHERE caminho = :caminho');
+        $stmt->execute(['caminho' => $caminho]);
+        return;
+    }
     if ($caminho && preg_match('~^uploads/conteudo_[a-zA-Z0-9_.-]+\\.(jpg|png|gif)$~', $caminho)) {
         $arquivo = __DIR__ . '/../views/admin/' . $caminho;
         if (is_file($arquivo) && !unlink($arquivo)) error_log('Não foi possível remover imagem: ' . $caminho);

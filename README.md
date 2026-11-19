@@ -4,13 +4,13 @@ Portal acadêmico em PHP e PostgreSQL para publicar projetos, notícias e inicia
 
 ## Abrir no ambiente atual
 
-Com Apache e PostgreSQL ligados, acesse:
+Com Apache ligado e o banco configurado disponível (PostgreSQL local ou Aiven), acesse:
 
 - Portal: http://localhost/portal-si/public/index.php
 - Login: http://localhost/portal-si/app/views/admin/login.php
 - Cadastro: http://localhost/portal-si/app/views/admin/cadastro_usuario.php
 
-Não é necessário compilar o frontend nem acessar serviços externos. Fontes e estilos funcionam sem CDN.
+Não é necessário compilar o frontend. Fontes e estilos funcionam sem CDN. Com o banco no Aiven, o servidor PHP precisa de acesso à internet.
 
 O projeto mantém as URLs PHP existentes em `app/views/admin`. Sirva a raiz do projeto (como o XAMPP já faz), não somente a pasta `public`.
 
@@ -20,7 +20,33 @@ PHP 8.1 ou superior com `pdo_pgsql`, `mbstring`, `fileinfo` e `iconv`. Os testes
 
 Neste computador, use **C:\xampp\php\php.exe**. O `php` encontrado primeiro no PATH é outra instalação, sem as extensões necessárias habilitadas.
 
-A configuração aceita `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` e `DB_PASSWORD` por variáveis de ambiente. Os valores locais padrão foram mantidos em `config/database.php`.
+A configuração aceita `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SSLMODE` e `DB_SSLROOTCERT` por variáveis de ambiente. Os valores locais padrão foram mantidos em `config/database.php`.
+
+### Banco no Aiven
+
+Neste computador, a conexão pode ser configurada em `config/database.local.php`, um arquivo PHP que retorna um array com as mesmas chaves `DB_*`. Esse arquivo é privado e ignorado pelo Git. Um `DB_HOST` definido no ambiente desativa a configuração local inteira, permitindo selecionar outro banco sem misturar credenciais.
+
+A migração de 19/11/2026 copiou as 8 tabelas do `portal_si` local para o banco `defaultdb` do serviço `pg-vinipi`. Foram comparados todos os registros e as 7 sequências de IDs antes da ativação da conexão neste computador.
+
+Para o Aiven, use `DB_SSLMODE=verify-full` e `DB_SSLROOTCERT` com o caminho absoluto do certificado CA obtido no console do serviço. O certificado local fica em `config/aiven-ca.pem`. Nunca coloque senhas ou URLs com credenciais no README ou em arquivos versionados. O projeto não carrega arquivos `.env` automaticamente.
+
+A migração usa `pg_dump` e `pg_restore --no-owner --no-acl --single-transaction --exit-on-error` em um banco de destino vazio. Backups privados ficam em `database/private/`, fora do Git e bloqueados por HTTP. O banco PostgreSQL local é preservado. Após a troca, novas gravações no Aiven não são sincronizadas automaticamente com o banco local.
+
+Os testes de integração continuam usando o banco local e um schema descartável, independentemente de `database.local.php`. Para voltar o portal ao PostgreSQL local, remova ou renomeie esse arquivo privado, ou defina todas as variáveis de conexão no ambiente do servidor PHP.
+
+O Aiven hospeda somente o banco: o site PHP e os uploads continuam no servidor onde o portal está instalado. O plano e os créditos de teste devem ser acompanhados no console do Aiven.
+
+### Publicação gratuita no Render
+
+O `Dockerfile` executa PHP 8.3 com Apache e as extensões PostgreSQL/mbstring. O `render.yaml` descreve um serviço gratuito. Crie um **Web Service / Docker** a partir deste repositório, selecione **Free**, configure as variáveis `DB_*` com os dados do Aiven e adicione o certificado como arquivo secreto `aiven-ca.pem` (disponível em `/etc/secrets/aiven-ca.pem`). Nunca envie `database.local.php`, backups ou senhas ao repositório.
+
+Use `DB_SSLMODE=verify-full`, `DB_SSLROOTCERT=/etc/secrets/aiven-ca.pem`, `APP_HTTPS=1`, `UPLOAD_STORAGE=database` e `PORT=80`. A verificação de saúde é `/public/index.php`. O HTTPS externo é gerenciado pelo Render; `APP_HTTPS` garante cookies de sessão seguros atrás desse proxy.
+
+Na inicialização, `database/migrate.php` cria, se necessário, somente a tabela adicional `portal_imagens`. Não recria o schema nem importa o seed. Com `UPLOAD_STORAGE=database`, as novas capas são armazenadas no PostgreSQL, até 2 MB cada, e servidas por `public/imagem.php`; assim persistem quando o container reinicia. Sem essa variável, o envio local de arquivos continua funcionando. Capas antigas em disco precisam ser migradas separadamente, caso existam publicações que as utilizem.
+
+O serviço gratuito pode suspender após 15 minutos sem acessos e demora para iniciar novamente. As sessões de login podem expirar após reinícios. O banco Aiven tem cobrança/plano independente do Render. Essa configuração destina-se à demonstração do projeto.
+
+Para testar os dois modos de armazenamento, execute a integração normalmente e depois com `$env:UPLOAD_STORAGE='database'`. Ambos usam schemas locais descartáveis.
 
 ## Instalação em um banco novo
 

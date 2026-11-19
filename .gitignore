@@ -5,3 +5,6 @@
 /app/views/admin/uploads/*
 !/app/views/admin/uploads/.htaccess
 .env
+/config/database.local.php
+/config/aiven-ca.pem
+/database/private/

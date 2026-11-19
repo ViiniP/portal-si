@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $novaImagem = null;
     if (!$erros) {
         try {
-            if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] !== UPLOAD_ERR_NO_FILE) $novaImagem = salvarImagem($_FILES['imagem']);
+            if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] !== UPLOAD_ERR_NO_FILE) $novaImagem = salvarImagem($_FILES['imagem'], $pdo);
             $params = [
                 'titulo' => $dados['titulo'], 'categoria_id' => (int) $dados['categoria_id'],
                 'resumo' => $dados['resumo'] ?: mb_substr($dados['corpo'], 0, 220),
@@ -47,11 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $stmt->execute($params);
             // A capa anterior é preservada até a gravação bem-sucedida no banco.
-            if ($novaImagem) removerImagem($conteudo['imagem_capa']);
+            if ($novaImagem) removerImagem($conteudo['imagem_capa'], $pdo);
             header('Location: conteudo_listar.php?sucesso=salvo');
             exit;
         } catch (RuntimeException $exception) {
-            if ($novaImagem) removerImagem($novaImagem);
+            if ($novaImagem) removerImagem($novaImagem, $pdo);
             error_log($exception->getMessage());
             $erros[] = $exception instanceof PDOException ? 'Não foi possível salvar o conteúdo. Tente novamente.' : $exception->getMessage();
         }

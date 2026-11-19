@@ -1,0 +1,14 @@
+.git
+.codex
+.agents
+.env*
+node_modules
+output
+tmp
+tests
+docs
+database/private
+config/database.local.php
+config/aiven-ca.pem
+app/views/admin/uploads/*
+!app/views/admin/uploads/.htaccess

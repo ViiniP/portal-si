@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $stmt = $pdo->prepare('DELETE FROM conteudos WHERE id=:id');
         $stmt->execute(['id' => $id]);
-        removerImagem($conteudo['imagem_capa']);
+        removerImagem($conteudo['imagem_capa'], $pdo);
         header('Location: conteudo_listar.php?sucesso=excluido');
         exit;
     } catch (PDOException $exception) {

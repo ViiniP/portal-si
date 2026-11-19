@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: portal-si
+    runtime: docker
+    plan: free
+    region: virginia
+    healthCheckPath: /public/index.php
+    autoDeployTrigger: off
+    envVars:
+      - key: PORT
+        value: "80"
+      - key: APP_HTTPS
+        value: "1"
+      - key: UPLOAD_STORAGE
+        value: database
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        value: defaultdb
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSLMODE
+        value: verify-full
+      - key: DB_SSLROOTCERT
+        value: /etc/secrets/aiven-ca.pem
