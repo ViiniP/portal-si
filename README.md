@@ -2,6 +2,8 @@
 
 Portal acadêmico em PHP e PostgreSQL para publicar projetos, notícias e iniciativas do curso de Sistemas de Informação.
 
+**Demonstração online:** https://portal-si.onrender.com/ — PHP/Apache no Render Free, conectado ao PostgreSQL no Aiven. A publicação usa a branch `codex/publicacao-render`; atualizações são implantadas manualmente no Render. A primeira abertura após inatividade pode levar cerca de um minuto.
+
 ## Abrir no ambiente atual
 
 Com Apache ligado e o banco configurado disponível (PostgreSQL local ou Aiven), acesse:
